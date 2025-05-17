@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Gateway</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 450px;
+            width: 90%;
+            position: relative;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        h1 {
+            color: #1a2a6c;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .lock-animation {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 60px;
+            color: #1a2a6c;
+            transition: transform 0.5s ease;
+        }
+        
+        .unlocked {
+            transform: rotate(10deg);
+            color: #4CAF50;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            transition: all 0.3s;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .form-control:focus {
+            border-color: #1a2a6c;
+            box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+        }
+        
+        .show-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #1a2a6c, #4a54af);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #15215a, #3e47a0);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 42, 108, 0.4);
+        }
+        
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+        
+        .btn-submit::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .btn-submit:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        .error-message {
+            background-color: rgba(255, 87, 87, 0.1);
+            border-left: 4px solid #ff5757;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+            color: #d32f2f;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4CAF50;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+            color: #388E3C;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            animation: float 15s infinite;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #1a2a6c;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hint {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .attempts {
+            text-align: center;
+            font-size: 13px;
+            color: #777;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1>Secure Gateway</h1>
+        
+        <div class="lock-animation" id="lockIcon">🔒</div>
+        
+        <div class="form-group">
+            <label for="passwordInput">Enter Access Key</label>
+            <div class="input-wrapper">
+                <input type="password" id="passwordInput" class="form-control" placeholder="Type your password here">
+                <button type="button" class="show-password" id="togglePassword">👁️</button>
+            </div>
+        </div>
+        
+        <button type="button" class="btn-submit" id="submitBtn">
+            Authenticate
+        </button>
+        
+        <div class="hint">Hint: Only authorized users have access.</div>
+        <div class="attempts" id="attempts">Remaining attempts: 5</div>
+        
+        <div class="error-message" id="errorMessage">
+            Authentication failed. Please check your password and try again.
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            Authentication successful! Redirecting to your content...
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <div>Verifying credentials...</div>
+        </div>
+    </div>
+
+    <script>
+        // Password configuration
+        const correctPassword = "gitaccess2025";
+        let attempts = 5;
+        
+        // Create floating particles
+        document.addEventListener('DOMContentLoaded', function() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random size between 5px and 20px
+                const size = Math.random() * 15 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation duration
+                const duration = Math.random() * 20 + 10;
+                particle.style.animationDuration = `${duration}s`;
+                
+                // Random animation delay
+                const delay = Math.random() * 20;
+                particle.style.animationDelay = `${delay}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        });
+        
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.textContent = '🔒';
+            } else {
+                passwordInput.type = 'password';
+                this.textContent = '👁️';
+            }
+        });
+        
+        // Check password and handle authentication
+        function checkPassword() {
+            const passwordInput = document.getElementById('passwordInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const loadingElement = document.getElementById('loading');
+            const lockIcon = document.getElementById('lockIcon');
+            const attemptsDisplay = document.getElementById('attempts');
+            
+            // Show loading animation
+            loadingElement.style.display = 'block';
+            
+            // Simulate authentication delay
+            setTimeout(function() {
+                loadingElement.style.display = 'none';
+                
+                if (passwordInput === correctPassword) {
+                    // Password is correct
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    lockIcon.textContent = '🔓';
+                    lockIcon.classList.add('unlocked');
+                    
+                    // After successful authentication, redirect to your GitHub Pages site
+                    setTimeout(function() {
+                        // Direct redirect to your GitHub Pages site
+                        window.open("https://khadicha05.github.io/khadicha17758/", "_self");
+                    }, 1500);
+                } else {
+                    // Password is incorrect
+                    attempts--;
+                    attemptsDisplay.textContent = `Remaining attempts: ${attempts}`;
+                    
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none';
+                    
+                    // Shake effect on container for wrong password
+                    const container = document.querySelector('.container');
+                    container.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        container.style.animation = '';
+                    }, 500);
+                    
+                    if (attempts <= 0) {
+                        document.getElementById('submitBtn').disabled = true;
+                        document.getElementById('passwordInput').disabled = true;
+                        errorMessage.textContent = "Maximum attempts reached. Please try again later.";
+                        
+                        // Reset attempts after 30 seconds
+                        setTimeout(function() {
+                            attempts = 5;
+                            attemptsDisplay.textContent = `Remaining attempts: ${attempts}`;
+                            document.getElementById('submitBtn').disabled = false;
+                            document.getElementById('passwordInput').disabled = false;
+                            errorMessage.textContent = "Authentication failed. Please check your password and try again.";
+                            errorMessage.style.display = 'none';
+                        }, 30000);
+                    }
+                }
+            }, 1200);
+        }
+        
+        // Submit button click handler
+        document.getElementById('submitBtn').addEventListener('click', checkPassword);
+        
+        // Allow pressing Enter key to submit
+        document.getElementById('passwordInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                checkPassword();
+            }
+        });
+        
+        // Add shake animation for wrong password
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                    20%, 40%, 60%, 80% { transform: translateX(5px); }
+                }
+            </style>
+        `);
+    </script>
+</body>
+</html>
